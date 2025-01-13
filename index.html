@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airdrop Registration</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .status {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Airdrop Registration</h1>
+    <button id="connectWallet">Connect Wallet</button>
+    <button id="registerWallet" disabled>Register for Airdrop</button>
+
+    <div class="status" id="status">Status: Not connected</div>
+
+    <script>
+        // Replace with your contract address and ABI
+        const contractAddress = "0xB6A86B7392cD8daA5F55D81ACeBb26F220C0eB6E";
+        const contractABI = [
+            {
+                "inputs": [],
+                "name": "registerWallet",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "wallet",
+                        "type": "address"
+                    }
+                ],
+                "name": "WalletRegistered",
+                "type": "event"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "wallet",
+                        "type": "address"
+                    }
+                ],
+                "name": "checkWallet",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "name": "isRegistered",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        let web3;
+        let contract;
+        let userAddress;
+
+        const statusDiv = document.getElementById("status");
+        const connectWalletButton = document.getElementById("connectWallet");
+        const registerWalletButton = document.getElementById("registerWallet");
+
+        // Connect to wallet
+        connectWalletButton.addEventListener("click", async () => {
+            if (window.ethereum) {
+                try {
+                    await window.ethereum.request({ method: "eth_requestAccounts" });
+                    web3 = new Web3(window.ethereum);
+
+                    const accounts = await web3.eth.getAccounts();
+                    userAddress = accounts[0];
+                    statusDiv.innerText = `Connected: ${userAddress}`;
+
+                    contract = new web3.eth.Contract(contractABI, contractAddress);
+
+                    // Enable the register button
+                    registerWalletButton.disabled = false;
+                } catch (error) {
+                    statusDiv.innerText = "Error connecting to wallet.";
+                    console.error(error);
+                }
+            } else {
+                statusDiv.innerText = "MetaMask is not installed.";
+            }
+        });
+
+        // Register wallet
+        registerWalletButton.addEventListener("click", async () => {
+            try {
+                statusDiv.innerText = "Registering wallet...";
+                await contract.methods.registerWallet().send({ from: userAddress });
+                statusDiv.innerText = "Wallet registered successfully!";
+            } catch (error) {
+                statusDiv.innerText = "Error registering wallet.";
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+</html>
